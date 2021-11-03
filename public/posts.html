@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lap 10</title>
+</head>
+<body>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+        import { getDatabase, ref, child, get, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-database.js";
+
+        const firebaseConfig = {
+                apiKey: "AIzaSyB2nT4LaWuA3KQcwPBUrXmN3AMXR0eVHs0",
+                authDomain: "project-973653966095716818.firebaseapp.com",
+                projectId: "project-973653966095716818",
+                databaseURL: "https://project-973653966095716818-default-rtdb.asia-southeast1.firebasedatabase.app/",
+                storageBucket: "project-973653966095716818.appspot.com",
+                messagingSenderId: "674376310951",
+                appId: "1:674376310951:web:93ba324d62d814dba2fb82",
+                measurementId: "G-DDVZHBPEHZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        //****show list of key
+        window.showList = function showList() {
+            get(child(ref(db), 'users')).then((snapshot) => {
+                var x = snapshot.val();
+                let dropdown = document.getElementById('keyList');
+                for (let i = dropdown.length; i>1; i--) {
+                    dropdown.remove(dropdown.length-1);
+                }
+                var y = Object.keys(x);
+                for (let i = 0; i < y.length; i++) {
+                    var option = document.createElement("option");
+                    option.text = y[i];
+                    option.value = y[i];
+                    dropdown.add(option);
+                }
+            });
+        }
+
+        //***Show value of selected key
+        window.showValue = function showValue() {
+            let dropdown = document.getElementById('keyList');
+            onValue(ref(db, 'users/' + dropdown.value), (snapshot) => {
+                var obj = snapshot.val();
+                document.getElementById("readName").innerHTML = obj.name;
+                document.getElementById("readAddress").innerHTML = obj.address;
+                document.getElementById("readTelephone").innerHTML = obj.telephone;
+            });
+            onValue(ref(db, 'last-post/' + dropdown.value), (snapshot) => {
+                var obj = snapshot.val();
+                console.log(obj);
+                if(obj === null){
+                    document.getElementById("readLastMessage").innerHTML = "Don't have last post";
+                }else {
+                    document.getElementById("readLastMessage").innerHTML = obj.msg;
+                }
+
+
+            });   
+        }
+
+        //***Update value of selected key
+        window.updateData = function updateData() {
+            var x = document.getElementById("newTelephoneValue").value;
+            var dropdown = document.getElementById('keyList');
+            var usrid = dropdown.value;
+            set(ref(db,'users/'+usrid+'/telephone'), x );
+            alert("Update Telephone Succese !!!")
+        }
+
+        window.updatePost = function upadatePost(){
+            var x = document.getElementById("newPost").value;
+            let value = {msg:x, name:document.getElementById("readName").innerHTML};
+            var dropdown = document.getElementById('keyList');
+            var usrid = dropdown.value;
+            let post = {msg:x, newDate:Date.now() , uid:usrid}
+            const updates = {};
+            updates['last-post/' + usrid] = value;
+            update(ref(db), updates);
+            const newPostKey = push(child(ref(db), 'posts')).key;
+            const updatesallPost = {};
+            updatesallPost['posts/' + usrid] = post;
+            update(ref(db), updatesallPost);
+            alert("Add Succese !!!")
+        }
+
+        //***delete seleted key
+        window.delData = function delData() {
+            const updates = {};
+            var dropdown = document.getElementById('keyList');
+            var  usrid= dropdown.value;
+            remove(child(ref(db), 'posts/'+ usrid));
+            alert("Delete Succese !!!")
+        }
+    </script>
+
+    <h1>Lab 10</h1>
+    <h1>READ</h1>
+    <br>
+    <h1> Choose following key </h1>
+    <select id="keyList" size="5" onchange="showValue()" >
+        
+    </select>
+    <button onclick="showList()">Refresh List</button>
+    <br>
+    Name: <b id="readName"></b><br>
+    Address: <b id="readAddress"></b><br>
+    Telephone: <b id="readTelephone"></b>
+    <br><hr>
+
+    <h1>Lastpost</h1>
+    msg is : <b id ="readLastMessage"></b><br>
+
+    <h1>Update User Telephone</h1>
+    Input your new telephone <b id="upkey"> </b> <br>
+    <input type="text" id="newTelephoneValue" placeholder="Enter new telephone">
+    <button onclick="updateData()">update</button>
+    <br><hr>
+
+    <h1>Delete All Post</h1>
+    <button onclick="delData()">Delete</button>
+    <br><hr>
+
+    <h1>Add New Post</h1>
+    <input type="text" id="newPost" placeholder="Enter new Post">
+    <br>
+    <button onclick="updatePost()">Add</button>
+    <br><hr>
+
+</body>
+</html>
